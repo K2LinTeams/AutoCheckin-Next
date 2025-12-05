@@ -10,15 +10,32 @@ use std::collections::HashSet;
 use std::thread;
 use std::time::Duration;
 
+/// User Agent string used for requests to simulate a mobile WeChat browser.
 const UA: &str = "Mozilla/5.0 (Linux; Android 12; PAL-AL00 Build/HUAWEIPAL-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/116.0.0.0 Mobile Safari/537.36 XWEB/1160065 MMWEBSDK/20231202 MMWEBID/1136 MicroMessenger/8.0.47.2560(0x28002F35) WeChat/arm64 Weixin NetType/4G Language/zh_CN ABI/arm64";
 
+/// Executes check-in tasks.
+///
+/// Handles the interaction with the target website to perform check-ins.
+/// Also handles sending notifications via WeCom if enabled.
 pub struct TaskExecutor {
+    /// The HTTP client used for making requests.
     client: Client,
+    /// The base URL of the target website.
     base_url: String,
+    /// WeCom configuration for sending notifications.
     wecom: WeComConfig,
 }
 
 impl TaskExecutor {
+    /// Creates a new `TaskExecutor`.
+    ///
+    /// # Arguments
+    ///
+    /// * `wecom` - The WeCom configuration.
+    ///
+    /// # Returns
+    ///
+    /// * `Self` - A new instance of `TaskExecutor`.
     pub fn new(wecom: WeComConfig) -> Self {
         Self {
             client: Client::builder().user_agent(UA).build().unwrap(),
@@ -27,6 +44,15 @@ impl TaskExecutor {
         }
     }
 
+    /// Executes a specific check-in task.
+    ///
+    /// If the task is enabled, it fetches active check-in sessions, and for each session,
+    /// it attempts to perform a sign-in with a slightly randomized location.
+    /// Sends a WeCom notification with the result.
+    ///
+    /// # Arguments
+    ///
+    /// * `task` - The task to execute.
     pub fn execute(&self, task: &Task) {
         if !task.enable {
             return;
@@ -79,6 +105,18 @@ impl TaskExecutor {
         }
     }
 
+    /// Builds the HTTP headers required for requests.
+    ///
+    /// Sets the User-Agent, Referer, and Cookie headers.
+    ///
+    /// # Arguments
+    ///
+    /// * `cookie` - The session cookie.
+    /// * `class_id` - The class ID, used for the Referer header.
+    ///
+    /// # Returns
+    ///
+    /// * `HeaderMap` - The constructed headers.
     fn build_headers(&self, cookie: &str, class_id: &str) -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static(UA));
@@ -97,6 +135,18 @@ impl TaskExecutor {
         headers
     }
 
+    /// Fetches the list of active check-in session IDs.
+    ///
+    /// Parses the course page to find active check-in elements.
+    ///
+    /// # Arguments
+    ///
+    /// * `headers` - The HTTP headers to use for the request.
+    /// * `class_id` - The class ID to check.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<HashSet<String>, String>` - A set of active check-in IDs, or an error message.
     fn get_active_tasks(
         &self,
         headers: &HeaderMap,
@@ -139,6 +189,19 @@ impl TaskExecutor {
         Ok(active_ids)
     }
 
+    /// Performs the sign-in request for a specific session.
+    ///
+    /// # Arguments
+    ///
+    /// * `headers` - The HTTP headers to use.
+    /// * `class_id` - The class ID.
+    /// * `sign_id` - The check-in session ID.
+    /// * `lat` - The latitude to report.
+    /// * `lng` - The longitude to report.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<String, String>` - A success message or an error message based on the response content.
     fn perform_sign(
         &self,
         headers: &HeaderMap,
@@ -180,6 +243,18 @@ impl TaskExecutor {
         }
     }
 
+    /// Generates a randomized coordinate within a small radius of the target location.
+    ///
+    /// Helps to simulate natural GPS drift and avoid detection of static coordinates.
+    ///
+    /// # Arguments
+    ///
+    /// * `lat` - The base latitude.
+    /// * `lng` - The base longitude.
+    ///
+    /// # Returns
+    ///
+    /// * `(String, String)` - The randomized latitude and longitude.
     fn random_coordinate(&self, lat: &str, lng: &str) -> (String, String) {
         let lat_val = lat.parse::<f64>().unwrap_or(0.0);
         let lng_val = lng.parse::<f64>().unwrap_or(0.0);
@@ -191,6 +266,18 @@ impl TaskExecutor {
         (format!("{:.6}", r_lat), format!("{:.6}", r_lng))
     }
 
+    /// Sends a notification via WeCom (Enterprise WeChat).
+    ///
+    /// Retrieves an access token and then sends a text message to the configured user.
+    ///
+    /// # Arguments
+    ///
+    /// * `title` - The title of the notification.
+    /// * `content` - The content of the notification.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), String>` - Ok on success, or an error message on failure.
     fn send_wecom_notification(&self, title: &str, content: &str) -> Result<(), String> {
         if !self.wecom.enable {
             return Ok(());

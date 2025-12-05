@@ -1,6 +1,10 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
+/**
+ * Resource object containing translations for different languages.
+ * Currently supports English ('en') and Chinese ('zh').
+ */
 const resources = {
   en: {
     translation: {
@@ -64,6 +68,12 @@ const resources = {
   }
 };
 
+/**
+ * Initializes the i18n instance with the provided resources.
+ * Sets the default language to Chinese ('zh') and disables escaping for interpolation.
+ *
+ * @type {i18n}
+ */
 i18n
   .use(initReactI18next)
   .init({

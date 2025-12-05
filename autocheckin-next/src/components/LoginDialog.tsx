@@ -6,12 +6,26 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Props for the LoginDialog component.
+ * @interface LoginDialogProps
+ * @property {boolean} open - Whether the dialog is currently open.
+ * @property {() => void} onClose - Callback function to close the dialog.
+ * @property {(cookie: string, classId: string) => void} onSuccess - Callback function called when login is successful.
+ */
 interface LoginDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: (cookie: string, classId: string) => void;
 }
 
+/**
+ * A dialog component for user login via QR code.
+ * Fetches a QR code from the backend and polls the login status.
+ *
+ * @param {LoginDialogProps} props - The component props.
+ * @returns {JSX.Element} The rendered LoginDialog component.
+ */
 const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onSuccess }) => {
   const { t } = useTranslation();
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -19,6 +33,10 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onSuccess }) =
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string>("");
 
+  /**
+   * Effect to load the QR code when the dialog is opened.
+   * Resets the state when the dialog is closed.
+   */
   useEffect(() => {
     if (open) {
       loadQrCode();
@@ -29,6 +47,10 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onSuccess }) =
     }
   }, [open]);
 
+  /**
+   * Effect to poll the login status periodically.
+   * If login is successful, calls onSuccess and closes the dialog.
+   */
   useEffect(() => {
     let interval: number;
     if (checkUrl) {
@@ -48,6 +70,10 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onSuccess }) =
     return () => clearInterval(interval);
   }, [checkUrl, onClose, onSuccess]);
 
+  /**
+   * Fetches the login QR code from the backend.
+   * Updates the state with the QR code image and the check URL.
+   */
   const loadQrCode = async () => {
     setLoading(true);
     try {

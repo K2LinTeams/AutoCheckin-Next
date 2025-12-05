@@ -9,6 +9,10 @@ import { LeafletMouseEvent } from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
+/**
+ * Sets the default icon for Leaflet markers.
+ * This is necessary because the default icon paths are often incorrect in build environments.
+ */
 let DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -17,6 +21,15 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+/**
+ * Props for the LocationDialog component.
+ * @interface LocationDialogProps
+ * @property {boolean} open - Whether the dialog is currently open.
+ * @property {() => void} onClose - Callback function to close the dialog.
+ * @property {(lat: string, lng: string) => void} onSelect - Callback function called when a location is selected.
+ * @property {string} initialLat - The initial latitude to display.
+ * @property {string} initialLng - The initial longitude to display.
+ */
 interface LocationDialogProps {
   open: boolean;
   onClose: () => void;
@@ -25,6 +38,13 @@ interface LocationDialogProps {
   initialLng: string;
 }
 
+/**
+ * A helper component to handle map click events.
+ *
+ * @param {Object} props - The component props.
+ * @param {(lat: number, lng: number) => void} props.onLocationSelect - Callback when a location is clicked on the map.
+ * @returns {null} This component renders nothing.
+ */
 const LocationPicker = ({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) => {
   useMapEvents({
     click(e: LeafletMouseEvent) {
@@ -34,6 +54,13 @@ const LocationPicker = ({ onLocationSelect }: { onLocationSelect: (lat: number, 
   return null;
 };
 
+/**
+ * A dialog component that displays a map for location selection.
+ * Users can click on the map to choose a location (latitude and longitude).
+ *
+ * @param {LocationDialogProps} props - The component props.
+ * @returns {JSX.Element} The rendered LocationDialog component.
+ */
 const LocationDialog: React.FC<LocationDialogProps> = ({ open, onClose, onSelect, initialLat, initialLng }) => {
   const [position, setPosition] = useState<[number, number]>([39.9042, 116.4074]); // Default Beijing
 
