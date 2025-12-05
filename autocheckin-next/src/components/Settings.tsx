@@ -5,14 +5,27 @@ import {
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 
+/**
+ * The Settings component for configuring global application settings.
+ * Currently allows configuring WeCom integration settings.
+ *
+ * @returns {JSX.Element} The rendered Settings component.
+ */
 const Settings: React.FC = () => {
   const { t } = useTranslation();
   const [config, setConfig] = useState<any>(null);
 
+  /**
+   * Effect to load the configuration from the backend when the component mounts.
+   */
   useEffect(() => {
     loadConfig();
   }, []);
 
+  /**
+   * Fetches the current configuration from the backend.
+   * Updates the state with the retrieved configuration.
+   */
   const loadConfig = async () => {
     try {
       const c = await invoke("get_config");
@@ -22,6 +35,13 @@ const Settings: React.FC = () => {
     }
   };
 
+  /**
+   * Handles changes to WeCom settings fields.
+   * Updates the local configuration state.
+   *
+   * @param {string} field - The name of the field being updated (e.g., 'corpid', 'secret').
+   * @param {any} value - The new value for the field.
+   */
   const handleWeComChange = (field: string, value: any) => {
       if (!config) return;
       setConfig({
@@ -36,6 +56,10 @@ const Settings: React.FC = () => {
       });
   };
 
+  /**
+   * Saves the current configuration to the backend.
+   * Displays an alert upon successful save.
+   */
   const handleSave = async () => {
       await invoke("update_config", { newConfig: config });
       alert(t("Saved"));

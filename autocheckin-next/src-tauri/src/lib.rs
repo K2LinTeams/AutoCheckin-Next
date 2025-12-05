@@ -13,23 +13,63 @@ use tauri::{AppHandle, Manager, State};
 
 // Commands
 
+/// Tauri command to fetch a login QR code.
+///
+/// Uses `AuthHandler` to retrieve a QR code image (Base64 encoded) and a check URL.
+///
+/// # Returns
+///
+/// * `Result<(String, String), String>` - Base64 image and check URL, or an error message.
 #[tauri::command]
 fn get_login_qr() -> Result<(String, String), String> {
     let auth = AuthHandler::new();
     auth.get_qr_code()
 }
 
+/// Tauri command to check the status of a login attempt.
+///
+/// Polls the provided URL to see if the user has scanned the QR code and logged in.
+///
+/// # Arguments
+///
+/// * `url` - The check URL returned by `get_login_qr`.
+///
+/// # Returns
+///
+/// * `Result<Option<(String, String)>, String>` - Session info if successful, None if pending, or an error.
 #[tauri::command]
 fn check_login_status(url: String) -> Result<Option<(String, String)>, String> {
     let auth = AuthHandler::new();
     auth.check_login(&url)
 }
 
+/// Tauri command to retrieve the current application configuration.
+///
+/// # Arguments
+///
+/// * `app_handle` - The Tauri application handle.
+///
+/// # Returns
+///
+/// * `AppConfig` - The current configuration.
 #[tauri::command]
 fn get_config(app_handle: AppHandle) -> AppConfig {
     load_config(&app_handle)
 }
 
+/// Tauri command to update the application configuration.
+///
+/// Updates the in-memory state and persists the configuration to disk.
+///
+/// # Arguments
+///
+/// * `app_handle` - The Tauri application handle.
+/// * `state` - The managed configuration state.
+/// * `new_config` - The new configuration object.
+///
+/// # Returns
+///
+/// * `Result<(), String>` - Ok on success, error message on failure.
 #[tauri::command]
 fn update_config(
     app_handle: AppHandle,
@@ -41,6 +81,20 @@ fn update_config(
     Ok(())
 }
 
+/// Tauri command to add a new task.
+///
+/// Assigns a new UUID to the task if one is not present, adds it to the configuration,
+/// and saves the configuration to disk.
+///
+/// # Arguments
+///
+/// * `app_handle` - The Tauri application handle.
+/// * `state` - The managed configuration state.
+/// * `task` - The task to add.
+///
+/// # Returns
+///
+/// * `Result<(), String>` - Ok on success, error message on failure.
 #[tauri::command]
 fn add_task(
     app_handle: AppHandle,
@@ -56,6 +110,19 @@ fn add_task(
     Ok(())
 }
 
+/// Tauri command to update an existing task.
+///
+/// Finds the task by ID and updates it. Saves the configuration to disk.
+///
+/// # Arguments
+///
+/// * `app_handle` - The Tauri application handle.
+/// * `state` - The managed configuration state.
+/// * `task` - The updated task object (must have a matching ID).
+///
+/// # Returns
+///
+/// * `Result<(), String>` - Ok on success, error message if task not found or save fails.
 #[tauri::command]
 fn update_task(app_handle: AppHandle, state: State<ConfigState>, task: Task) -> Result<(), String> {
     let mut config = state.0.lock().unwrap();
@@ -68,6 +135,19 @@ fn update_task(app_handle: AppHandle, state: State<ConfigState>, task: Task) -> 
     }
 }
 
+/// Tauri command to delete a task.
+///
+/// Removes the task with the specified ID from the configuration and saves changes.
+///
+/// # Arguments
+///
+/// * `app_handle` - The Tauri application handle.
+/// * `state` - The managed configuration state.
+/// * `task_id` - The ID of the task to delete.
+///
+/// # Returns
+///
+/// * `Result<(), String>` - Ok on success, error message if task not found or save fails.
 #[tauri::command]
 fn delete_task(
     app_handle: AppHandle,
@@ -84,6 +164,10 @@ fn delete_task(
     }
 }
 
+/// The main entry point for the Tauri application.
+///
+/// Configures plugins, initializes state, sets up the system tray, starts the scheduler,
+/// and registers command handlers.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()

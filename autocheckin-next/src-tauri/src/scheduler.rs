@@ -7,6 +7,15 @@ use std::time::Duration;
 use tauri::AppHandle;
 use tokio::time::sleep;
 
+/// Starts the task scheduler loop.
+///
+/// This function runs indefinitely, checking every minute if there are any enabled tasks
+/// scheduled for the current time. If matching tasks are found, they are executed in
+/// separate threads using `tokio::task::spawn_blocking`.
+///
+/// # Arguments
+///
+/// * `app_handle` - The Tauri application handle, used to load the configuration.
 pub async fn start_scheduler(app_handle: AppHandle) {
     info!("Scheduler started");
     loop {

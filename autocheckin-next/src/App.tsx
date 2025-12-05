@@ -14,6 +14,11 @@ import "./i18n";
 import Tasks from "./components/Tasks";
 import Settings from "./components/Settings";
 
+/**
+ * Custom Material-UI theme configuration.
+ * Sets the font family to Comfortaa and ZCOOL KuaiLe.
+ * Defines the primary and secondary colors for the light mode.
+ */
 const theme = createTheme({
   typography: {
     fontFamily: [
@@ -33,16 +38,33 @@ const theme = createTheme({
   },
 });
 
+/**
+ * The main application component.
+ * It manages the top-level navigation and state of the application.
+ * Utilizes a BottomNavigation bar to switch between Tasks, Map, and Settings views.
+ *
+ * @returns {JSX.Element} The rendered application component.
+ */
 function App() {
   const { t } = useTranslation();
   const [value, setValue] = useState(0);
 
+  /**
+   * Component for the Map View placeholder.
+   *
+   * @returns {JSX.Element} The Map View component.
+   */
   const MapView = () => (
       <Box p={2}>
           <p>{t("Use the task editor to select locations.")}</p>
       </Box>
   );
 
+  /**
+   * Renders the content based on the currently selected navigation value.
+   *
+   * @returns {JSX.Element} The component corresponding to the selected view.
+   */
   const renderContent = () => {
     switch (value) {
       case 0: return <Tasks />;
