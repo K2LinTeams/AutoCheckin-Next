@@ -49,3 +49,9 @@ jobs:
           releaseBody: "See the assets to download this version and install."
           releaseDraft: true
           prerelease: false
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-bundle
+          path: autocheckin-next/src-tauri/target/release/bundle/
