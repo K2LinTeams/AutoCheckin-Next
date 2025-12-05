@@ -202,6 +202,11 @@ pub fn run() {
                 })
                 .build(app)?;
 
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+
             // Start scheduler
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
